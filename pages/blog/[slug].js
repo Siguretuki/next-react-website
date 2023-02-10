@@ -1,14 +1,23 @@
-import { getPostBySlug,getAllSlugs } from 'lib/api'
+import { getPostBySlug, getAllSlugs } from 'lib/api'
 import { extractText } from 'lib/extract-text'
+import { prevNextPost } from 'lib/prev-next-post'
 import Meta from '@/components/meta'
 import Container from 'components/container'
 import PostHeader from '@/components/post-header'
-import { TwoColumn, TwoColumnMain, TwoColumnSidebar } from '@/components/two-column'
+import PostBody from '@/components/post-body'
+import {
+    TwoColumn,
+    TwoColumnMain,
+    TwoColumnSidebar
+} from '@/components/two-column'
 import ConvertBody from '@/components/convert-body'
 import PostCategories from '@/components/post-categories'
-import PostBody from '@/components/post-body'
+import Pagination from '@/components/pagination'
 import Image from 'next/image'
 import { getPlaiceholder } from 'plaiceholder'
+import { prevNextPost } from 'lib/prev-next-post'
+
+import { eyecatchLocal } from 'lib/constants'
 
 export default function Post( {
     title,
@@ -16,15 +25,26 @@ export default function Post( {
     content,
     eyecatch,
     categories,
+    description,
+    prevPost,
+    nextPost,
 }) {
     return (
         <Container>
-            <Meta pageTitle={title} pageDesc={description} pageImg={eyecatch.url} pageImgW={eyecatch.width} pageImgH={eyecatch.height} />
+            <Meta
+                pageTitle={title}
+                pageDesc={description}
+                pageImg={eyecatch.url}
+                pageImgW={eyecatch.width}
+                pageImgH={eyecatch.height}
+            />
+
             <article>
                 <PostHeader title={title} subtitle="Blog Article" publish={publish} />
 
                 <figure>
                     <Image
+                    key={eyecatch.url}
                     src={eyecatch.url}
                     alt=""
                     layout="responsive"
@@ -39,12 +59,21 @@ export default function Post( {
 
                 <TwoColumn>
                     <TwoColumnMain>
-                        <PostBody><ConvertBody contentHTML={content}/></PostBody>
+                        <PostBody>
+                            <ConvertBody contentHTML={content} />
+                        </PostBody>
                     </TwoColumnMain>
                     <TwoColumnSidebar>
                         <PostCategories categories={categories}/>
                     </TwoColumnSidebar>
                 </TwoColumn>
+
+                <Pagenation
+                    prevText={prevPost.title}
+                    prevUrl={`/blog${prevPost.slug}`}
+                    nextText={prevPost.title}
+                    nextUrl={`/blog${nextPost.slug}`}
+                />
             </article>
         </Container>
     )
@@ -52,6 +81,7 @@ export default function Post( {
 
 export async function getStaticPaths() {
     const getAllSlugs = await getAllSlugs()
+
     return {
         paths: getAllSlugs.map(({slug})=>`/blog/${slug}`),
         fallback:false,
@@ -70,6 +100,9 @@ export async function getStaticProps(context) {
     const { base64 } = await getPlaiceholder(eyecatch.url)
     eyecatch.blurDataURL = base64
 
+    const allSlugs = await getAllSlugs()
+    const [prevPost, nextPost] = prevNextPost(allSlugs, slug)
+
     return {
         props: {
             title: post.title,
@@ -78,6 +111,8 @@ export async function getStaticProps(context) {
             eyecatch: eyecatch,
             categories: post.categories,
             description: description,
+            prevPost: prevPost,
+            nextPost: nextPost,
         },
     }
 }
