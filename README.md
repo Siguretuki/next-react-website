@@ -4,3 +4,5 @@
 
 * [サポートサイト](https://book.mynavi.jp/supportsite/detail/9784839980177.html)
 * [書籍情報](https://ebisu.com/next-react-website/)
+
+  ## 授業で使用
